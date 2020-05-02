@@ -4,6 +4,7 @@ import json
 from connectiondb import inicializar_db,cargar_datos
 from flask_cors import CORS
 import os
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 CORS(app)
@@ -41,7 +42,8 @@ def listall():
     try:
         db = inicializar_db()
         res = []
-        for x in db.list.find({},{"_id":0}):
+        for x in db.list.find({}):
+            x["_id"] = str(x["_id"])
             res.append(x)
         return jsonify (res)
     except (Exception) as err:
@@ -52,7 +54,8 @@ def listmarvel():
     try:
         db = inicializar_db()
         res = []
-        for x in db.list.find({"house":"MARVEL"},{"_id":0}):
+        for x in db.list.find({"house":"MARVEL"}):
+            x["_id"] = str(x["_id"])
             res.append(x)
         return jsonify (res)
     except (Exception) as err:
@@ -63,7 +66,8 @@ def listdc():
     try:
         db = inicializar_db()
         res = []
-        for x in db.list.find({"house":"DC"},{"_id":0}):
+        for x in db.list.find({"house":"DC"}):
+            x["_id"] = str(x["_id"])
             res.append(x)
         return jsonify (res)
     except (Exception) as err:
@@ -74,7 +78,8 @@ def get():
     try:
         id = request.json ["id"]
         db = inicializar_db()
-        res = db.list.find_one({"id":id},{"_id":0})
+        res = db.list.find_one({"_id":ObjectId(id)})
+        res["_id"] = str(res["_id"])
         return jsonify (res)
     except (Exception) as err:
         return str(err), 500
@@ -94,7 +99,6 @@ def add():
         if 'equipment' in request.json:
             equipment = request.json["equipment"]
             nuevo = {
-                "id":(db.list.count()+1),
                 "name":name,
                 "character":character,
                 "biography":biography,
@@ -106,7 +110,6 @@ def add():
             }
         else:
             nuevo = {
-                "id":(db.list.count()+1),
                 "name":name,
                 "character":character,
                 "biography":biography,
@@ -136,7 +139,6 @@ def modify():
         img_count = request.json ["img_count"]
 
         nuevo = {
-            "id":id,
             "name":name,
             "character":character,
             "biography":biography,
@@ -146,7 +148,7 @@ def modify():
             "equipment":equipment,
             "img_count":img_count
         }
-        db.list.update_one({"id":nuevo["id"]},{"$set":nuevo})
+        db.list.update_one({"_id":ObjectId(id)},{"$set":nuevo})
         return "OK"
     except (Exception) as err:
         return str(err), 500
@@ -156,7 +158,7 @@ def delete():
     try:
         id = request.json ["id"]
         db = inicializar_db()
-        res = db.list.delete_one({"id":id})
+        res = db.list.delete_one({"_id":ObjectId(id)})
         return "OK"
     except (Exception) as err:
         return str(err), 500
